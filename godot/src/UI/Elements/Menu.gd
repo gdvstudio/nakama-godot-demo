@@ -6,9 +6,9 @@ extends Control
 signal open
 signal closed
 
-var is_enabled := true setget set_is_enabled
+var is_enabled := true: set = set_is_enabled
 
-var status := "" setget set_status
+var status := "": set = set_status
 
 
 func open() -> void:
