@@ -13,9 +13,11 @@ func _ready() -> void:
 		printerr("%s: Missing Password Field Path3D NodePath" % [get_path()])
 
 
-func _get_configuration_warnings() -> String:
-	return "You must set the Password Field" if not password_field else ""
-
+func _get_configuration_warnings() -> PackedStringArray:
+	var warnings = PackedStringArray()
+	if not password_field:
+		warnings.append("You must set the Password Field")
+	return warnings
 
 func _validate(text: String) -> bool:
 	if not password_field:
