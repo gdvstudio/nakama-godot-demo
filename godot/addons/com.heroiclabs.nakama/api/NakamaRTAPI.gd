@@ -38,7 +38,6 @@ class Channel extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func _to_string():
 		if is_exception(): return get_exception()._to_string()
@@ -104,7 +103,6 @@ class ChannelMessageAck extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func _to_string():
 		if is_exception(): return get_exception()._to_string()
@@ -155,7 +153,6 @@ class ChannelPresenceEvent extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func _to_string():
 		if is_exception(): return get_exception()._to_string()
@@ -210,7 +207,6 @@ class Error extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func _to_string():
 		if is_exception(): return get_exception()._to_string()
@@ -255,7 +251,6 @@ class Match extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	static func create(p_ns : GDScript, p_dict : Dictionary):
 		return _safe_ret(NakamaSerializer.deserialize(p_ns, "Match", p_dict), Match) as Match
@@ -273,7 +268,7 @@ class MatchData extends NakamaAsyncResult:
 	const _SCHEMA = {
 		"match_id": {"name": "match_id", "type": TYPE_STRING, "required": true},
 		"presence": {"name": "presence", "type": "UserPresence", "required": false},
-		"op_code": {"name": "op_code", "type": TYPE_STRING, "required": false},
+		"op_code": {"name": "op_code", "type": TYPE_INT, "required": false},
 		"data": {"name": "data", "type": TYPE_STRING, "required": false}
 	}
 
@@ -287,21 +282,40 @@ class MatchData extends NakamaAsyncResult:
 	# The user that sent this game state update.
 	var presence : UserPresence
 
-	# The byte contents of the state change.
-	var data : String
+	# The raw base64-encoded contents of the state change.
+	var base64_data : String
+
+	# The contents of the state change decoded as a UTF-8 string.
+	var _data
+	var data : String:
+		get:
+			if _data == null and base64_data != '':
+				_data = Marshalls.base64_to_utf8(base64_data)
+			return _data if _data != null else ''
+		set(v):
+			_data = v
+
+	# The contents of the state change decoded as binary data.
+	var _binary_data
+	var binary_data : PackedByteArray:
+		get:
+			if _binary_data == null and base64_data != '':
+				_binary_data = Marshalls.base64_to_raw(base64_data)
+			return _binary_data
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func _to_string():
 		if is_exception(): return get_exception()._to_string()
 		return "MatchData<match_id=%s, op_code=%s, presence=%s, data=%s>" % [match_id, op_code, presence, data]
 
 	static func create(p_ns : GDScript, p_dict : Dictionary) -> MatchData:
-		var out := _safe_ret(NakamaSerializer.deserialize(p_ns, "MatchData", p_dict), MatchData) as MatchData
-		if out.data: # Decode base64 received data
-			out.data = Marshalls.base64_to_utf8(out.data)
+		var out = _safe_ret(NakamaSerializer.deserialize(p_ns, "MatchData", p_dict), MatchData) as MatchData
+		# Store the base64 data, ready to be decoded when the developer requests it.
+		if out._data != null:
+			out.base64_data = out._data
+			out._data = null
 		return out
 
 	static func get_result_key() -> String:
@@ -327,7 +341,6 @@ class MatchPresenceEvent extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func _to_string():
 		if is_exception(): return get_exception()._to_string()
@@ -363,13 +376,12 @@ class MatchmakerMatched extends NakamaAsyncResult:
 
 	# The other users matched with this user and the parameters they sent.
 	var users : Array # MatchmakerUser
-	
+
 	# The current user who matched with opponents.
 	var self_user : MatchmakerUser
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func _to_string():
 		if is_exception(): return get_exception()._to_string()
@@ -396,7 +408,6 @@ class MatchmakerTicket extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	static func create(p_ns : GDScript, p_dict : Dictionary) -> MatchmakerTicket:
 		return _safe_ret(NakamaSerializer.deserialize(p_ns, "MatchmakerTicket", p_dict), MatchmakerTicket) as MatchmakerTicket
@@ -433,7 +444,6 @@ class MatchmakerUser extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func _to_string():
 		if is_exception(): return get_exception()._to_string()
@@ -459,7 +469,6 @@ class Status extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	static func create(p_ns : GDScript, p_dict : Dictionary) -> Status:
 		return _safe_ret(NakamaSerializer.deserialize(p_ns, "Status", p_dict), Status) as Status
@@ -489,7 +498,6 @@ class StatusPresenceEvent extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func _to_string():
 		if is_exception(): return get_exception()._to_string()
@@ -526,7 +534,6 @@ class Stream extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func _to_string():
 		if is_exception(): return get_exception()._to_string()
@@ -632,7 +639,6 @@ class UserPresence extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func serialize() -> Dictionary:
 		return NakamaSerializer.serialize(self)
@@ -680,7 +686,6 @@ class Party extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func serialize() -> Dictionary:
 		return NakamaSerializer.serialize(self)
@@ -713,7 +718,6 @@ class PartyPresenceEvent extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func serialize() -> Dictionary:
 		return NakamaSerializer.serialize(self)
@@ -742,7 +746,6 @@ class PartyLeader extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func serialize() -> Dictionary:
 		return NakamaSerializer.serialize(self)
@@ -771,7 +774,6 @@ class PartyJoinRequest extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func serialize() -> Dictionary:
 		return NakamaSerializer.serialize(self)
@@ -800,7 +802,6 @@ class PartyMatchmakerTicket extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func serialize() -> Dictionary:
 		return NakamaSerializer.serialize(self)
@@ -830,12 +831,30 @@ class PartyData extends NakamaAsyncResult:
 	var presence : NakamaRTAPI.UserPresence
 	# Op code value.
 	var op_code : int
-	# Data payload, if any.
-	var data : String
+
+	# The raw base64-encoded contents of the state change.
+	var base64_data : String
+
+	# The contents of the state change decoded as a UTF-8 string.
+	var _data
+	var data : String:
+		get:
+			if _data == null and base64_data != '':
+				_data = Marshalls.base64_to_utf8(base64_data)
+			return _data if _data != null else ''
+		set(v):
+			_data = v
+
+	# The contents of the state change decoded as binary data.
+	var _binary_data
+	var binary_data : PackedByteArray:
+		get:
+			if _binary_data == null and base64_data != '':
+				_binary_data = Marshalls.base64_to_raw(base64_data)
+			return _binary_data
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func serialize() -> Dictionary:
 		return NakamaSerializer.serialize(self)
@@ -846,8 +865,10 @@ class PartyData extends NakamaAsyncResult:
 
 	static func create(p_ns : GDScript, p_dict : Dictionary) -> PartyData:
 		var out := _safe_ret(NakamaSerializer.deserialize(p_ns, "PartyData", p_dict), PartyData) as PartyData
-		if out.data: # Decode base64 received data
-			out.data = Marshalls.base64_to_utf8(out.data)
+		# Store the base64 data, ready to be decoded when the developer requests it.
+		if out._data != null:
+			out.base64_data = out._data
+			out._data = null
 		return out
 
 	static func get_result_key() -> String:
@@ -863,7 +884,6 @@ class PartyClose extends NakamaAsyncResult:
 
 	func _init(p_ex = null):
 		super(p_ex)
-		pass
 
 	func serialize():
 		return NakamaSerializer.serialize(self)

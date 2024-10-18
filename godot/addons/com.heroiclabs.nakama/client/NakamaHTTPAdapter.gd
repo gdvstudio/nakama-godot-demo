@@ -14,6 +14,8 @@ var auto_retry : bool = true
 # The maximum number of time a request will be retried when auto_retry is true
 var auto_retry_count : int = 3
 var auto_retry_backoff_base : int = 10
+# Whether or not to use threads when making HTTP requests.
+var use_threads : bool = true
 
 var _pending = {}
 var id : int = 0
@@ -29,7 +31,7 @@ class AsyncRequest:
 	var backoff_time := 10
 	var logger : NakamaLogger
 
-	var canceled = false
+	var cancelled = false
 	var result : int = HTTPRequest.RESULT_NO_RESPONSE
 	var response_code : int = -1
 	var response_body : PackedByteArray
@@ -52,7 +54,7 @@ class AsyncRequest:
 		logger = p_logger
 
 	func should_retry():
-		return cur_try < retry_count and not canceled
+		return cur_try < retry_count and not cancelled
 
 	func retry():
 		var time = pow(backoff_time, cur_try) * rng.randf_range(0.5, 1)
@@ -60,15 +62,15 @@ class AsyncRequest:
 			id, retry_count - cur_try, time
 		])
 		cur_try += 1
-		await backoff(time).completed
-		if canceled:
+		await backoff(time)
+		if cancelled:
 			return
-		return await make_request().completed
+		return await make_request()
 
 	func make_request():
-		var err = request.request(uri, headers, true, method, body.get_string_from_utf8())
+		var err = request.request(uri, headers, method, body.get_string_from_utf8())
 		if err != OK:
-			await request.get_tree().idle_frame
+			await request.get_tree().process_frame
 			result = HTTPRequest.RESULT_CANT_CONNECT
 			logger.debug("Request %d failed to start, error: %d" % [id, err])
 			return
@@ -84,7 +86,7 @@ class AsyncRequest:
 		timer = null
 
 	func cancel():
-		canceled = true
+		cancelled = true
 		request.cancel_request()
 		if timer:
 			timer.time_left = 0
@@ -92,33 +94,37 @@ class AsyncRequest:
 			request.call_deferred("emit_signal", "request_completed", HTTPRequest.RESULT_REQUEST_FAILED, 0, [], [])
 
 	func parse_result():
-		if canceled:
-			return NakamaException.new("Request canceled", -1, -1, true)
+		if cancelled:
+			return NakamaException.new("Request cancelled", -1, -1, true)
 		elif result != HTTPRequest.RESULT_SUCCESS:
+			if result == null:
+				result = 0
 			return NakamaException.new("HTTPRequest failed!", result)
 
-		var test_json_conv = JSON.new()
-		test_json_conv.parse(response_body.get_string_from_utf8())
-		var json : JSON = test_json_conv.get_data()
-		if json.error != OK:
+		var json = JSON.new()
+
+		var json_error = json.parse(response_body.get_string_from_utf8())
+		if json_error != OK:
 			logger.debug("Unable to parse request %d response. JSON error: %d, response code: %d" % [
 				id, json.error, response_code
 			])
 			return NakamaException.new("Failed to decode JSON response", response_code)
 
+		var parsed = json.get_data()
+
 		if response_code != HTTPClient.RESPONSE_OK:
 			var error = ""
 			var code = -1
-			if typeof(json.result) == TYPE_DICTIONARY:
-				if "message" in json.result:
-					error = json.result["message"]
-				elif "error" in json.result:
-					error = json.result["error"]
+			if typeof(parsed) == TYPE_DICTIONARY:
+				if "message" in parsed:
+					error = parsed["message"]
+				elif "error" in parsed:
+					error = parsed["error"]
 				else:
-					error = str(json.result)
-				code = json.result["code"] if "code" in json.result else -1
+					error = str(parsed)
+				code = parsed["code"] if "code" in parsed else -1
 			else:
-				error = str(json.result)
+				error = str(parsed)
 			if typeof(error) == TYPE_DICTIONARY:
 				error = JSON.stringify(error)
 			logger.debug("Request %d returned response code: %d, RPC code: %d, error: %s" % [
@@ -126,7 +132,7 @@ class AsyncRequest:
 			])
 			return NakamaException.new(error, response_code, code)
 
-		return json.result
+		return parsed
 
 
 # Send a HTTP request.
@@ -139,7 +145,7 @@ class AsyncRequest:
 func send_async(p_method : String, p_uri : String, p_headers : Dictionary, p_body : PackedByteArray):
 	var req = HTTPRequest.new()
 	req.timeout = timeout
-	if OS.get_name() != 'HTML5':
+	if use_threads and OS.get_name() != 'Web':
 		req.use_threads = true # Threads not available nor needed on the web.
 
 	# Parse method
@@ -170,7 +176,7 @@ func send_async(p_method : String, p_uri : String, p_headers : Dictionary, p_bod
 
 	add_child(req)
 
-	return _send_async(id, _pending)
+	return await _send_async(id, _pending)
 
 func get_last_token():
 	return id
@@ -188,7 +194,7 @@ static func _clear_request(p_request : AsyncRequest, p_pending : Dictionary, p_i
 static func _send_async(p_id : int, p_pending : Dictionary):
 
 	var req : AsyncRequest = p_pending[p_id]
-	await req.make_request().completed
+	await req.make_request()
 
 	while req.result != HTTPRequest.RESULT_SUCCESS:
 		req.logger.debug("Request %d failed with result: %d, response code: %d" % [
@@ -196,7 +202,7 @@ static func _send_async(p_id : int, p_pending : Dictionary):
 		])
 		if not req.should_retry():
 			break
-		await req.retry().completed
+		await req.retry()
 
 	_clear_request(req, p_pending, p_id)
 	return req.parse_result()

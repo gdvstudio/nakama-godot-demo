@@ -4,19 +4,39 @@ extends RefCounted
 # Usually contains at least an error message.
 class_name NakamaException
 
-var status_code : int = -1: set = _no_set
-var grpc_status_code : int = -1: set = _no_set
-var message : String = "": set = _no_set
-var canceled : bool = false: set = _no_set
+var _status_code : int = -1
+var status_code : int:
+	set(v):
+		pass
+	get:
+		return _status_code
 
-func _no_set(_p):
-	pass
+var _grpc_status_code : int = -1
+var grpc_status_code : int:
+	set(v):
+		pass
+	get:
+		return _grpc_status_code
+
+var _message : String = ""
+var message : String:
+	set(v):
+		pass
+	get:
+		return _message
+
+var _cancelled : bool = false
+var cancelled : bool:
+	set(v):
+		pass
+	get:
+		return _cancelled
 
 func _init(p_message : String = "", p_status_code : int = -1, p_grpc_status_code : int = -1, p_cancelled : bool = false):
-	status_code = p_status_code
-	grpc_status_code = p_grpc_status_code
-	message = p_message
-	canceled = p_cancelled
+	_status_code = p_status_code
+	_grpc_status_code = p_grpc_status_code
+	_message = p_message
+	_cancelled = p_cancelled
 
 func _to_string() -> String:
-	return "NakamaException(StatusCode={%s}, Message='{%s}', GrpcStatusCode={%s})" % [status_code, message, grpc_status_code]
+	return "NakamaException(StatusCode={%s}, Message='{%s}', GrpcStatusCode={%s})" % [_status_code, _message, _grpc_status_code]
