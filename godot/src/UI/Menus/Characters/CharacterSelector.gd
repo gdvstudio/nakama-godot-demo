@@ -1,6 +1,6 @@
 # Panel that controls the loading and displaying of characters in a character list.
 # Also acts as the spawner and point of entry into the multiplayer level scene.
-extends Menu
+extends PanelContainer
 
 signal character_deletion_requested(index)
 signal login_pressed(selected_index)
@@ -16,7 +16,7 @@ var last_index := -1
 
 @onready var confirmation_popup := $ConfirmationPopup
 
-
+var is_enabled: bool = true  # Variable de estado
 # Initializes the control, fetches the characters from a successfully logged
 # in player, and adds them in a controllable list. Also gets the last successful
 # logged in character.
@@ -28,10 +28,10 @@ func setup(characters: Array, last_played_character: Dictionary) -> void:
 
 
 func set_is_enabled(value: bool) -> void:
-	super.set_is_enabled(value)
-	login_button.disabled = not is_enabled
-	create_button.disabled = not is_enabled
-	character_list.is_enabled = is_enabled
+	is_enabled = value  # Actualiza la variable
+	login_button.disabled = not is_enabled  # Habilita/deshabilita el botón de inicio de sesión
+	create_button.disabled = not is_enabled  # Habilita/deshabilita el botón de creación
+	character_list.is_enabled = is_enabled  # Habilita/deshabilita la lista de personajes
 
 
 func _on_LoginButton_pressed() -> void:

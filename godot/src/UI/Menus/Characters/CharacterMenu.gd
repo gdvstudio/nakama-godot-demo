@@ -1,5 +1,5 @@
 # Controls the visibility of menus to select, delete, and create a new character.
-extends MenuList
+extends Control
 
 signal new_character_requested(name, color)
 signal character_deletion_requested(index)

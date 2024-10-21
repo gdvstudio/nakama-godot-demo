@@ -1,6 +1,6 @@
 # Menu that lists the user's characters.
 # Each `CharacterListing` in the menu allows the player to select and delete a character.
-extends Menu
+extends VBoxContainer
 
 signal requested_deletion(character_index)
 signal character_selected(name, color)
@@ -9,7 +9,7 @@ const CharacterListing := preload("res://src/UI/Menus/Characters/CharacterListin
 
 var selected_index := -1
 
-
+var is_enabled: bool = true  # Variable para almacenar el estado
 # Fills the list with character listings and gives focus to the last played character's listing.
 func setup(characters: Array, last_played_character: Dictionary) -> void:
 	for index in range(characters.size()):
@@ -45,11 +45,9 @@ func delete_character(index: int) -> void:
 
 
 func set_is_enabled(value: bool) -> void:
-	super.set_is_enabled(value)
-	if get_child_count() == 0:
-		await self.ready
-	for character_listing in get_children():
-		character_listing.is_enabled = is_enabled
+	is_enabled = value  # Actualiza el estado
+	for character_listing in get_children():  # Itera sobre los hijos
+		character_listing.set_is_enabled(is_enabled)  # Asegúrate de que cada hijo tenga este método
 
 
 func reset() -> void:
