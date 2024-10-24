@@ -15,11 +15,13 @@ var is_enabled := true: set = set_is_enabled
 
 func _gui_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_accept"):
-		emit_signal("character_accepted", get_position_in_parent())
+		emit_signal("character_accepted", get_global_position())  # Cambia esto si necesitas la posición en relación a su padre
 		accept_event()
+	
 	if event is InputEventMouseButton and event.doubleclick:
-		emit_signal("character_accepted", get_position_in_parent())
+		emit_signal("character_accepted", get_global_position())  # Cambia esto si necesitas la posición en relación a su padre
 		accept_event()
+
 
 
 func setup(character_name: String, character_color: Color) -> void:
@@ -36,8 +38,7 @@ func set_is_enabled(value: bool) -> void:
 
 
 func _on_DeleteButton_pressed() -> void:
-	emit_signal("requested_deletion", get_position_in_parent())
-
+	emit_signal("requested_deletion", get_position())  # Usa get_position() para obtener la posición relativa al padre
 
 func _on_focus_entered() -> void:
-	emit_signal("character_selected", get_position_in_parent())
+	emit_signal("character_selected", get_position())  # Usa get_position() para obtener la posición relativa al padre
