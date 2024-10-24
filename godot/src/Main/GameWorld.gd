@@ -17,9 +17,11 @@ var last_color: Color
 
 func _ready() -> void:
 	#warning-ignore: return_value_discarded
-	ServerConnection.connect(
-		"initial_state_received", self, "_on_ServerConnection_initial_state_received"
-	)
+	#ServerConnection.connect(
+		#"initial_state_received", self, "_on_ServerConnection_initial_state_received"
+	#)
+	
+	ServerConnection.initial_state_received.connect(_on_ServerConnection_initial_state_received)
 	game_ui.setup(Color.GREEN)
 
 
@@ -61,9 +63,12 @@ func join_world(
 	#warning-ignore: return_value_discarded
 	ServerConnection.connect("color_updated", Callable(self, "_on_ServerConnection_color_updated"))
 	#warning-ignore: return_value_discarded
-	ServerConnection.connect(
-		"chat_message_received", self, "_on_ServerConnection_chat_message_received"
-	)
+	#ServerConnection.connect(
+		#"chat_message_received", self, "_on_ServerConnection_chat_message_received"
+	#)
+	
+	ServerConnection.chat_message_received.connect(_on_ServerConnection_chat_message_received)
+	
 	#warning-ignore: return_value_discarded
 	ServerConnection.connect("character_spawned", Callable(self, "_on_ServerConnection_character_spawned"))
 
@@ -158,9 +163,12 @@ func _on_ServerConnection_initial_state_received(
 	positions: Dictionary, inputs: Dictionary, colors: Dictionary, names: Dictionary
 ) -> void:
 	#warning-ignore: return_value_discarded
-	ServerConnection.disconnect(
-		"initial_state_received", self, "_on_ServerConnection_initial_state_received"
-	)
+	#ServerConnection.disconnect(
+		#"initial_state_received", self, "_on_ServerConnection_initial_state_received"
+	#)
+	
+	ServerConnection.initial_state_received.disconnect(_on_ServerConnection_initial_state_received)
+	
 	join_world(positions, inputs, colors, names)
 
 

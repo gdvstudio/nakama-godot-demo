@@ -1,6 +1,6 @@
 # The game's main menu. Aggregates the LoginForm and RegisterForm.
 # Emits signals with relevant information for a parent node to communicate with the game server.
-extends MenuList
+extends Control
 
 signal login_pressed(email, password, do_remember_email)
 signal register_pressed(email, password, do_remember_email)
@@ -9,7 +9,8 @@ signal register_pressed(email, password, do_remember_email)
 @onready var register_form := $RegisterForm
 
 var status := "": set = set_status
-
+var menu_current: Control  
+var is_enabled: bool = true 
 
 func _ready() -> void:
 	self.menu_current = login_form

@@ -22,7 +22,7 @@ const DRAG_AMOUNT := 0.2
 var color := Color.WHITE: set = _set_color
 var state: int = States.ON_GROUND
 
-var velocity := Vector2.ZERO
+#var velocity := Vector2.ZERO
 var direction := Vector2.ZERO
 var username := "": set = _set_username
 
